@@ -2,74 +2,175 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Moben Rent</title>
+    <title>Dashboard Admin Moben</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #eef2f3; padding: 15px; margin: 0; }
-        .header { text-align: center; background: #007bff; color: white; padding: 15px; border-radius: 0 0 10px 10px; margin-bottom: 20px;}
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc;}
-        button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-acc { background: #28a745; width: 48%; display: inline-block; }
-        .btn-tolak { background: #dc3545; width: 48%; display: inline-block; float: right;}
-        .fraud { border-left: 5px solid #dc3545; background: #fdf2f2; }
-        .link-btn { display: inline-block; padding: 5px; background: #ddd; color: black; text-decoration: none; font-size: 12px; margin: 2px; }
-        #dashboard { display: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 0; margin: 0; }
+        .header { text-align: center; background: #16213E; color: white; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        .tabs { display: flex; background: white; margin-bottom: 15px; border-bottom: 2px solid #ddd; }
+        .tab-btn { flex: 1; padding: 14px; text-align: center; font-weight: bold; color: #555; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: #E8A33D; border-bottom: 3px solid #E8A33D; }
+
+        .container { padding: 15px; }
+        .card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        input, select, button { width: 100%; padding: 12px; margin-top: 8px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+        
+        button { font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary { background: #16213E; color: white; }
+        .btn-acc { background: #28a745; color: white; width: 48%; display: inline-block; }
+        .btn-tolak { background: #dc3545; color: white; width: 48%; display: inline-block; float: right; }
+        .btn-pay { background: #E8A33D; color: #16213E; margin-top: 10px; }
+        .btn-end { background: #6c757d; color: white; margin-top: 10px; }
+
+        .badge-aman { background: #d4edda; color: #155724; padding: 8px; border-radius: 6px; text-align: center; font-weight: bold; margin: 8px 0; border: 1px solid #c3e6cb; }
+        .badge-nunggak { background: #f8d7da; color: #721c24; padding: 8px; border-radius: 6px; text-align: center; font-weight: bold; margin: 8px 0; border: 1px solid #f5c6cb; }
+        .fraud { border-left: 5px solid #dc3545; }
+        
+        .link-group { display: flex; gap: 8px; margin: 10px 0; }
+        .link-btn { flex: 1; text-align: center; padding: 8px; background: #e9ecef; color: #333; text-decoration: none; font-size: 13px; border-radius: 6px; font-weight: 500; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .grid-info div span { display: block; font-size: 11px; color: #666; }
     </style>
 </head>
 <body>
 
-<div class="header"><h2>Moben Control Panel</h2></div>
+<div class="header"><h2 style="margin:0;">Moben Control Panel</h2></div>
 
-<div id="loginBox" class="card">
-    <label>PIN Admin:</label><input type="password" id="pinInput">
-    <button onclick="login()">Masuk</button>
+<div class="container" id="loginBox">
+    <div class="card">
+        <label>PIN Admin:</label><input type="password" id="pinInput">
+        <button class="btn-primary" onclick="login()">Masuk</button>
+    </div>
 </div>
 
-<div id="dashboard">
-    <div class="card">
-        <label>Filter 16 Wilayah:</label>
-        <select id="regionFilter" onchange="loadData()">
-            <option value="Kota Bekasi">Kota Bekasi</option>
-            <option value="Kabupaten Bekasi">Kabupaten Bekasi</option>
-        </select>
+<div id="dashboard" style="display: none;">
+    <div class="tabs">
+        <div class="tab-btn active" onclick="switchTab('pending')" id="btnTabPending">Pendaftar Baru</div>
+        <div class="tab-btn" onclick="switchTab('aktif')" id="btnTabAktif">Unit Aktif</div>
     </div>
-    <div id="dataContainer"></div>
+    
+    <div class="container">
+        <div id="tabPending" class="tab-content active"></div>
+        <div id="tabAktif" class="tab-content"></div>
+    </div>
 </div>
 
 <script>
+    // GANTI DENGAN LINK DEPLOY APP SCRIPT ADMIN ANDA
     const GAS_ADMIN_URL = "https://script.google.com/macros/s/AKfycbwoeZkaW5JepuBZdaft9MChcqEFRLih1hNXyl2wNh62J9YTUtyLUUFnDd2OB78UbUEX0g/exec";
     let pin = "";
 
     function login() { pin = document.getElementById('pinInput').value; document.getElementById('loginBox').style.display='none'; document.getElementById('dashboard').style.display='block'; loadData(); }
 
+    function switchTab(tab) {
+        document.getElementById('btnTabPending').classList.remove('active');
+        document.getElementById('btnTabAktif').classList.remove('active');
+        document.getElementById('tabPending').classList.remove('active');
+        document.getElementById('tabAktif').classList.remove('active');
+        
+        if (tab === 'pending') {
+            document.getElementById('btnTabPending').classList.add('active');
+            document.getElementById('tabPending').classList.add('active');
+        } else {
+            document.getElementById('btnTabAktif').classList.add('active');
+            document.getElementById('tabAktif').classList.add('active');
+        }
+    }
+
+    function formatRp(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
+
     function loadData() {
-        const r = document.getElementById('regionFilter').value;
-        const c = document.getElementById('dataContainer');
-        c.innerHTML = "Memuat...";
-        fetch(`${GAS_ADMIN_URL}?pin=${pin}&region=${r}`).then(res=>res.json()).then(data => {
+        const cP = document.getElementById('tabPending');
+        const cA = document.getElementById('tabAktif');
+        cP.innerHTML = "<p align='center'>Memuat data...</p>";
+        cA.innerHTML = "<p align='center'>Memuat data...</p>";
+        
+        fetch(`${GAS_ADMIN_URL}?pin=${pin}`).then(res=>res.json()).then(data => {
             if(data.status === "error") return alert(data.message);
-            c.innerHTML = "";
+            cP.innerHTML = ""; cA.innerHTML = "";
+            
             data.data.forEach(i => {
                 let fraudCls = i.keamanan.includes("MENCURIGAKAN") ? "fraud" : "";
-                c.innerHTML += `
-                <div class="card ${fraudCls}">
-                    <h3>${i.nama}</h3>
-                    <p style="font-size:12px"><b>Status:</b> ${i.status} <br><b>Keamanan:</b> ${i.keamanan}</p>
-                    <a href="${i.fotoKtp}" class="link-btn" target="_blank">KTP</a>
-                    <a href="${i.fotoSelfie}" class="link-btn" target="_blank">Selfie</a>
-                    <a href="${i.mapsUrl}" class="link-btn" target="_blank">Maps</a>
-                    <div style="margin-top:10px;">
-                        <button class="btn-acc" onclick="aksi(${i.row},'${i.nama}','ACC')">ACC</button>
-                        <button class="btn-tolak" onclick="aksi(${i.row},'${i.nama}','Tolak')">Tolak</button>
-                    </div>
-                </div>`;
+                let waLink = `https://wa.me/62${i.noWa.replace(/^0+/, '').replace(/\D/g,'')}`;
+
+                if (i.status === "PENDING") {
+                    cP.innerHTML += `
+                    <div class="card ${fraudCls}">
+                        <h3 style="margin: 0 0 5px;">${i.nama}</h3>
+                        <p style="font-size:12px; margin:0 0 10px; color:#555;">📍 ${i.keamanan}</p>
+                        
+                        <div class="link-group">
+                            <a href="${i.fotoKtp}" class="link-btn" target="_blank">KTP</a>
+                            <a href="${i.fotoSelfie}" class="link-btn" target="_blank">Selfie</a>
+                            <a href="${i.folderUrl}" class="link-btn" target="_blank">Semua Berkas</a>
+                        </div>
+                        <a href="${i.mapsUrl}" target="_blank" style="display:block; text-align:center; font-size:12px; color:#007bff; margin-bottom:15px;">Buka Google Maps</a>
+                        
+                        <div>
+                            <button class="btn-acc" onclick="aksiAcc(${i.row},'${i.nama}')">ACC Sewa</button>
+                            <button class="btn-tolak" onclick="aksiBase(${i.row},'${i.nama}','TOLAK')">Tolak</button>
+                        </div>
+                    </div>`;
+                } 
+                else if (i.status === "AKTIF") {
+                    let badgeDiv = i.saldo >= 0 
+                        ? `<div class="badge-aman">🟢 AMAN (Saldo: ${formatRp(i.saldo)})</div>`
+                        : `<div class="badge-nunggak">🔴 NUNGGAK (Minus: ${formatRp(i.saldo)})</div>`;
+
+                    cA.innerHTML += `
+                    <div class="card">
+                        <h3 style="margin: 0 0 5px;">${i.nama}</h3>
+                        <div style="font-weight:bold; color:#16213E;">🏍️ ${i.plat}</div>
+                        ${badgeDiv}
+                        
+                        <div class="grid-info">
+                            <div><span>Hari Sewa Ke-</span><b>${i.hariSewa} Hari</b></div>
+                            <div><span>Total Tagihan</span><b>${formatRp(i.tagihan)}</b></div>
+                            <div style="grid-column: span 2;"><span>Total Uang Masuk</span><b style="color:#28a745;">${formatRp(i.uangMasuk)}</b></div>
+                        </div>
+
+                        <button class="btn-pay" onclick="aksiBayar(${i.row},'${i.nama}')">➕ Input Pembayaran Harian</button>
+                        
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <a href="${waLink}" target="_blank" style="flex:1; text-align:center; padding:12px; background:#25D366; color:white; text-decoration:none; border-radius:8px; font-weight:bold;">Chat WA</a>
+                            <button class="btn-end" style="flex:1; margin:0;" onclick="aksiBase(${i.row},'${i.nama}','SELESAI')">Selesai Sewa</button>
+                        </div>
+                    </div>`;
+                }
             });
+            
+            if(cP.innerHTML === "") cP.innerHTML = "<p align='center' style='color:#888;'>Tidak ada pendaftar baru.</p>";
+            if(cA.innerHTML === "") cA.innerHTML = "<p align='center' style='color:#888;'>Tidak ada motor yang sedang disewa.</p>";
         });
     }
 
-    function aksi(row, nama, act) {
-        if(!confirm(act + " " + nama + "?")) return;
-        fetch(GAS_ADMIN_URL, {method:'POST', body:JSON.stringify({pin:pin, region:document.getElementById('regionFilter').value, row:row, nama:nama, action:act})})
+    function aksiAcc(row, nama) {
+        let plat = prompt("Masukkan Plat Motor & Jenis untuk " + nama + "\n(Contoh: B 1234 XYZ - Vario):");
+        if (!plat) return;
+        let dp = prompt("Masukkan Uang Awal / DP Masuk (Tanpa Titik/Koma):\n(Contoh: 50000)", "50000");
+        if (!dp) return;
+
+        kirimData({pin:pin, action:'ACC', row:row, nama:nama, plat:plat, dp:dp});
+    }
+
+    function aksiBayar(row, nama) {
+        let nom = prompt("Masukkan Nominal Transfer/Cash Harian dari " + nama + " (Tanpa Titik/Koma):\n(Contoh: 40000)");
+        if (!nom || isNaN(nom)) return;
+
+        kirimData({pin:pin, action:'BAYAR', row:row, nama:nama, nominal:nom});
+    }
+
+    function aksiBase(row, nama, act) {
+        if(!confirm("Yakin ingin melakukan " + act + " pada " + nama + "?")) return;
+        kirimData({pin:pin, action:act, row:row, nama:nama});
+    }
+
+    function kirimData(payload) {
+        fetch(GAS_ADMIN_URL, {method:'POST', body:JSON.stringify(payload)})
         .then(r=>r.json()).then(res=>{ alert(res.message); loadData(); });
     }
 </script>
